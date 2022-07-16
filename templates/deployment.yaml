@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect
+spec:
+  selector:
+    matchLabels:
+      app: prefect
+  template:
+    metadata:
+      labels:
+        app: prefect
+    spec:
+      containers:
+      - name: prefect-api
+        image: prefecthq/prefect:2.0b8-python3.9
+        command: ["prefect"]
+        args: [
+          "orion", 
+          "start",
+          "--host", "0.0.0.0", 
+          "--port", "4200"
+        ]
+        imagePullPolicy: IfNotPresent
+        # resources:
+        #   limits:
+        #     memory: "500Mi"
+        #     cpu: "500m"
+        ports:
+        - containerPort: 4200
+      - name: prefect-agent
+        image: prefecthq/prefect:2.0b8-python3.9
+        command: ["prefect"]
+        args: [
+          "agent", 
+          "start", 
+          "kubernetes"
+        ]
+        imagePullPolicy: "IfNotPresent"
+        env:
+          - name: PREFECT_API_URL
+            value: http://prefect:4200/api
+      restartPolicy: Always
